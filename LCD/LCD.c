@@ -1,4 +1,6 @@
 #include "LCD.h"
+#include <util/delay.h>
+#include <avr/io.h>
 
 int LCD_RS;
 int LCD_RW;
@@ -10,13 +12,41 @@ int LCD_D7;
 
 //Internal helper functions here:
 
+void LCD_EnablePin(int pin)
+{
+	int mask = 1<<(pin%8);
+#ifdef DDRA
+	switch(pin/8)
+	{
+		case 0:
+			DDRA = DDRA|mask;
+			break;
+#endif
+#ifdef DDRB
+		case 1:
+			DDRB = DDRB|mask;
+			break;
+#endif
+#ifdef DDRC
+		case 2:
+			DDRC = DDRC|mask;
+			break;
+#endif
+#ifdef DDRD
+		case 3:
+			DDRD = DDRD|mask;
+			break;
+#endif
+		
+	}
+}
+
 void LCD_DrivePin(int pin, int val)
 {
 	int mask = 1<<(pin%8);
-	
+#ifdef PORTA
 	switch(pin/8)
 	{		
-#ifdef PORTA
 		case 0:
 			if(val)
 				PORTA = PORTA|mask;
@@ -91,12 +121,21 @@ void LCD_SetLCDPins(int rs, int rw, int en, int D4, int D5, int D6, int D7)
 
 void LCD_InitLCD()
 {
+	
+	LCD_EnablePin(LCD_RS);
+	LCD_EnablePin(LCD_RW);
+	LCD_EnablePin(LCD_EN);
+	LCD_EnablePin(LCD_D4);
+	LCD_EnablePin(LCD_D5);
+	LCD_EnablePin(LCD_D6);
+	LCD_EnablePin(LCD_D7);
+	
 	LCD_DriveInterface(0,0,0,1,0,0);
 	LCD_DriveInterface(0,0,0,1,0,0);
 	LCD_DriveInterface(0,0,0,0,1,1);
 	_delay_us(40);
 	LCD_DriveInterface(0,0,0,0,0,0);
-	LCD_DriveInterface(0,0,1,1,1,1);
+	LCD_DriveInterface(0,0,0,0,1,1);
 	_delay_us(40);
 	LCD_DriveInterface(0,0,0,0,0,0);
 	LCD_DriveInterface(0,0,1,0,0,0);
